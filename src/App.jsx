@@ -577,7 +577,7 @@ export default function App() {
       bgmAudioRef.current.pause();
     }
     
-    // Give 2 seconds gap before switching state and starting celebration BGM
+    // Give 1 second gap before switching state and starting celebration BGM
     setTimeout(() => {
       setGameState('won');
       setIsPlaying(true);
@@ -613,7 +613,7 @@ export default function App() {
         if (Date.now() < end) requestAnimationFrame(frame);
       };
       frame();
-    }, 2000);
+    }, 1000);
   };
 
   const toggleMusic = () => {
