@@ -110,3 +110,33 @@ html, body {
   filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.55));
 }
 
+/* Candle Flame wobble & smoke drift animations */
+@keyframes wobble-flame {
+  0%, 100% {
+    transform: scale(1) rotate(-1.5deg);
+  }
+  50% {
+    transform: scale(1.06) rotate(2deg);
+  }
+}
+
+.animate-wobble-flame {
+  animation: wobble-flame 0.7s ease-in-out infinite;
+}
+
+@keyframes smoke-drift {
+  0% {
+    opacity: 0.8;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-22px) scale(1.6);
+  }
+}
+
+.animate-smoke-drift {
+  animation: smoke-drift 0.8s ease-out forwards;
+}
+
+

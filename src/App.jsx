@@ -85,6 +85,64 @@ const generatePopSoundUri = () => {
 
 const POP_SOUND_URI = generatePopSoundUri();
 
+// Dynamically generate a short white-noise "poof" sound for candle blowing
+const generatePoofSoundUri = () => {
+  const sampleRate = 8000;
+  const duration = 0.15; // 150ms
+  const numSamples = sampleRate * duration;
+  const buffer = new Uint8Array(44 + numSamples);
+  
+  // RIFF header
+  buffer[0] = 0x52; buffer[1] = 0x49; buffer[2] = 0x46; buffer[3] = 0x46; // "RIFF"
+  const fileLength = 36 + numSamples;
+  buffer[4] = fileLength & 0xFF;
+  buffer[5] = (fileLength >> 8) & 0xFF;
+  buffer[6] = (fileLength >> 16) & 0xFF;
+  buffer[7] = (fileLength >> 24) & 0xFF;
+  buffer[8] = 0x57; buffer[9] = 0x41; buffer[10] = 0x56; buffer[11] = 0x45; // "WAVE"
+  
+  // Format chunk
+  buffer[12] = 0x66; buffer[13] = 0x6D; buffer[14] = 0x74; buffer[15] = 0x20; // "fmt "
+  buffer[16] = 16; buffer[17] = 0; buffer[18] = 0; buffer[19] = 0; // chunk size
+  buffer[20] = 1; buffer[21] = 0; // PCM format
+  buffer[22] = 1; buffer[23] = 0; // Mono channel
+  buffer[24] = sampleRate & 0xFF;
+  buffer[25] = (sampleRate >> 8) & 0xFF;
+  buffer[26] = (sampleRate >> 16) & 0xFF;
+  buffer[27] = (sampleRate >> 24) & 0xFF;
+  const byteRate = sampleRate;
+  buffer[28] = byteRate & 0xFF;
+  buffer[29] = (byteRate >> 8) & 0xFF;
+  buffer[30] = (byteRate >> 16) & 0xFF;
+  buffer[31] = (byteRate >> 24) & 0xFF;
+  buffer[32] = 1; buffer[33] = 0; // block align
+  buffer[34] = 8; buffer[35] = 0; // bits per sample (8-bit)
+  
+  // Data chunk
+  buffer[36] = 0x64; buffer[37] = 0x61; buffer[38] = 0x74; buffer[39] = 0x61; // "data"
+  buffer[40] = numSamples & 0xFF;
+  buffer[41] = (numSamples >> 8) & 0xFF;
+  buffer[42] = (numSamples >> 16) & 0xFF;
+  buffer[43] = (numSamples >> 24) & 0xFF;
+  
+  // Generate white noise with exponential decay (blow sound)
+  for (let i = 0; i < numSamples; i++) {
+    const noise = Math.random() * 2 - 1;
+    const envelope = Math.exp(-8 * (i / numSamples));
+    buffer[44 + i] = Math.floor((noise * envelope * 0.35 + 0.5) * 255);
+  }
+  
+  // Convert buffer to base64 Data URI
+  let binary = '';
+  const len = buffer.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(buffer[i]);
+  }
+  return 'data:audio/wav;base64,' + btoa(binary);
+};
+
+const POOF_SOUND_URI = generatePoofSoundUri();
+
 // Fallback Synthesizer for "Level Up, Mannu" retro 8-bit chip-tune track
 class SynthSequencer {
   constructor() {
@@ -220,6 +278,59 @@ export default function App() {
   const animationFrameRef = useRef(null);
   const poppedCountRef = useRef(0);
 
+  const [candles, setCandles] = useState([true, true, true, true, true, true, true, true]);
+
+  const playPoofSound = () => {
+    try {
+      const poofAudio = new Audio(POOF_SOUND_URI);
+      poofAudio.volume = 0.8;
+      poofAudio.play().catch(e => console.warn("Failed to play poof sound:", e));
+    } catch(e) {}
+  };
+
+  const blowCandle = (index) => {
+    if (!candles[index]) return;
+    playPoofSound();
+    setCandles(prev => {
+      const next = [...prev];
+      next[index] = false;
+      const allOut = next.every(c => c === false);
+      if (allOut) {
+        triggerGrandConfettiShower();
+      }
+      return next;
+    });
+  };
+
+  const triggerGrandConfettiShower = () => {
+    if (window.confetti) {
+      window.confetti({
+        particleCount: 150,
+        spread: 85,
+        origin: { y: 0.6 }
+      });
+      const end = Date.now() + 3000;
+      const frame = () => {
+        window.confetti({
+          particleCount: 4,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: ['#ff007f', '#ff7f00', '#eab308']
+        });
+        window.confetti({
+          particleCount: 4,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: ['#10b981', '#06b6d4', '#a855f7']
+        });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
+    }
+  };
+
   // Dynamically load canvas-confetti script and initialize audio
   useEffect(() => {
     // 1. Inject canvas-confetti CDN script
@@ -278,6 +389,7 @@ export default function App() {
   // Handle game/music state toggling
   const startQuest = () => {
     setGameState('playing');
+    setCandles([true, true, true, true, true, true, true, true]); // Reset candles for the next round
 
     // Spawn initial balloons
     for (let i = 0; i < 4; i++) {
@@ -604,6 +716,86 @@ export default function App() {
                 <path d="M 100 144 L 102 150 L 108 150 L 103 154 L 105 160 L 100 156 Z" fill="#fef08a"/>
               </svg>
             </div>
+          </div>
+
+          {/* Interactive Birthday Cake (Blow Out the Candles) */}
+          <div className="w-full flex flex-col items-center mb-6 bg-purple-50/50 border border-purple-100 rounded-3xl p-4 md:p-6 shadow-inner">
+            <span className="text-[11px] text-purple-500 font-bold uppercase tracking-wider mb-2">
+              🎂 Tap each candle to blow it out! 🎂
+            </span>
+            <div className="relative w-64 h-48 select-none">
+              <svg viewBox="0 0 200 150" className="w-full h-full">
+                {/* Cake Stand */}
+                <path d="M 30 140 L 170 140 L 150 146 L 50 146 Z" fill="#e2e8f0" />
+                <rect x="92" y="130" width="16" height="10" fill="#cbd5e1" />
+                <ellipse cx="100" cy="130" rx="75" ry="8" fill="#e2e8f0" />
+
+                {/* Cake Tier 1 (Bottom) */}
+                <rect x="35" y="95" width="130" height="35" rx="6" fill="#78350f" /> {/* Chocolate */}
+                {/* Frosting drips Bottom */}
+                <path d="M 35 95 Q 45 105 55 95 Q 65 105 75 95 Q 85 105 95 95 Q 105 105 115 95 Q 125 105 135 95 Q 145 105 155 95 Q 165 105 165 95" fill="none" stroke="#f472b6" strokeWidth="5" strokeLinecap="round" />
+
+                {/* Cake Tier 2 (Top) */}
+                <rect x="50" y="65" width="100" height="30" rx="4" fill="#fbcfe8" /> {/* Strawberry */}
+                {/* Frosting drips Top */}
+                <path d="M 50 65 Q 60 72 70 65 Q 80 72 90 65 Q 100 72 110 65 Q 120 72 130 65 Q 140 72 150 65" fill="none" stroke="#db2777" strokeWidth="4" strokeLinecap="round" />
+
+                {/* Cake toppings (Berries) */}
+                <circle cx="60" cy="63" r="3.5" fill="#be123c" />
+                <circle cx="80" cy="63" r="3.5" fill="#be123c" />
+                <circle cx="100" cy="63" r="3.5" fill="#be123c" />
+                <circle cx="120" cy="63" r="3.5" fill="#be123c" />
+                <circle cx="140" cy="63" r="3.5" fill="#be123c" />
+
+                {/* 8 Candles */}
+                {[...Array(8)].map((_, i) => {
+                  const x = 56 + i * 12; // Spaces 8 candles on the top tier (x from 56 to 140)
+                  const candleColor = ['#38bdf8', '#fb7185', '#34d399', '#fbbf24', '#c084fc', '#f472b6', '#2dd4bf', '#fb923c'][i];
+                  return (
+                    <g key={i} className="cursor-pointer" onClick={() => blowCandle(i)}>
+                      {/* Candle body */}
+                      <rect x={x} y="42" width="5" height="23" rx="1" fill={candleColor} />
+                      {/* Candle wick */}
+                      <line x1={x + 2.5} y1="42" x2={x + 2.5} y2="38" stroke="#475569" strokeWidth="1.2" />
+
+                      {/* Flame or smoke */}
+                      {candles[i] ? (
+                        /* Flame */
+                        <path
+                          d={`M ${x + 2.5} 24 C ${x + 6} 32, ${x + 6} 38, ${x + 2.5} 38 C ${x - 1} 38, ${x - 1} 32, ${x + 2.5} 24 Z`}
+                          fill="url(#flameGradient)"
+                          className="origin-bottom animate-wobble-flame"
+                          style={{ transformOrigin: `${x + 2.5}px 38px`, animationDelay: `${i * 0.1}s` }}
+                        />
+                      ) : (
+                        /* Smoke Puff */
+                        <g className="animate-smoke-drift">
+                          <circle cx={x + 2.5} cy="32" r="3" fill="#cbd5e1" opacity="0.6" />
+                          <circle cx={x + 4.5} cy="26" r="4" fill="#94a3b8" opacity="0.4" />
+                          <circle cx={x + 1.5} cy="20" r="5" fill="#64748b" opacity="0.2" />
+                        </g>
+                      )}
+                    </g>
+                  );
+                })}
+
+                {/* SVG Definitions for Gradients */}
+                <defs>
+                  <radialGradient id="flameGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="30%">
+                    <stop offset="0%" stopColor="#fef08a" />
+                    <stop offset="40%" stopColor="#f97316" />
+                    <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+                  </radialGradient>
+                </defs>
+              </svg>
+            </div>
+
+            {/* Display message once all are blown out */}
+            {candles.every(c => c === false) && (
+              <div className="mt-3 text-emerald-600 font-extrabold text-xs md:text-sm animate-pulse flex items-center gap-1">
+                🎉 Yay! You blew out all the candles! 🥳🎂
+              </div>
+            )}
           </div>
 
           {/* Real-time Dynamic Lyrics Display Bar */}
