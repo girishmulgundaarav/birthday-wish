@@ -280,6 +280,11 @@ export default function App() {
   const balloonContainerRef = useRef(null);
   const animationFrameRef = useRef(null);
   const poppedCountRef = useRef(0);
+  const gameStateRef = useRef(gameState);
+
+  useEffect(() => {
+    gameStateRef.current = gameState;
+  }, [gameState]);
 
   const [candles, setCandles] = useState([true, true, true, true, true, true, true, true]);
 
@@ -359,7 +364,7 @@ export default function App() {
 
     // Unlocking BGM for mobile browsers
     const handleUnlockBgm = () => {
-      if (bgmAudioRef.current && bgmAudioRef.current.paused) {
+      if (bgmAudioRef.current && bgmAudioRef.current.paused && gameStateRef.current !== 'won') {
         bgmAudioRef.current.play().catch(() => {});
       }
     };
