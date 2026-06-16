@@ -608,7 +608,6 @@ export default function App() {
 
           {/* Real-time Dynamic Lyrics Display Bar */}
           <div className="w-full bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-pink-200 rounded-2xl py-3 px-4 mb-6 min-h-[50px] flex flex-col justify-center items-center shadow-inner">
-            <span className="text-[10px] text-pink-400 font-bold uppercase tracking-wider mb-1">Karaoke Voice Track</span>
             <p className="text-sm md:text-base font-extrabold text-pink-600 text-center animate-pulse tracking-wide">
               {currentLyric}
             </p>
