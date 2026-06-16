@@ -77,3 +77,36 @@ html, body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(168, 85, 247, 0.5);
 }
+
+/* Rainbow text gradient and glow for arcade style lyrics */
+@keyframes rainbow-text {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.rainbow-glow-text {
+  background: linear-gradient(
+    to right,
+    #ff007f, /* Hot Pink */
+    #ff7f00, /* Orange */
+    #eab308, /* Gold/Yellow */
+    #10b981, /* Emerald/Green */
+    #06b6d4, /* Cyan/Blue */
+    #a855f7, /* Purple */
+    #ff007f  /* back to Hot Pink */
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: rainbow-text 4s linear infinite;
+  filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.55));
+}
+
