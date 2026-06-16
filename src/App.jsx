@@ -638,20 +638,15 @@ export default function App() {
       {gameState === 'welcome' && (
         <div className="z-40 w-11/12 max-w-md p-8 rounded-[32px] bg-white/40 backdrop-blur-md border border-white/60 shadow-2xl text-center flex flex-col items-center transform scale-100 transition-all duration-500">
           <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-black tracking-widest uppercase px-4 py-1.5 rounded-full mb-6 shadow-md animate-bounce">
-            Birthday Invitation 💌
+            Special Quest Unlocked 👑
           </div>
           
-          <h1 className="font-display font-black text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 leading-tight mb-4">
-            Mannu's World! 🦄✨
+          <h1 className="font-display font-black text-5xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 leading-tight mb-4">
+            Hi Mannu! ✨
           </h1>
           
-          <div className="relative w-28 h-28 my-6 flex items-center justify-center animate-float">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-20 animate-ping"></span>
-            <span className="text-6xl drop-shadow-lg filter">🎁</span>
-          </div>
-          
           <p className="text-slate-600 font-semibold leading-relaxed mb-8 text-sm md:text-base">
-            Click below to enter a magical birthday world created just for you. Make sure your volume is turned up! 🔊🎶
+            You've received an invite to a secret birthday world. Enter below to start your quest! Make sure your sound is turned up! 🔊🎶
           </p>
 
           <button 
