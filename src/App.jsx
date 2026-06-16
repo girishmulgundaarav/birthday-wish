@@ -668,22 +668,22 @@ export default function App() {
 
       {/* 2. WELCOME DISPLAY STATE */}
       {gameState === 'welcome' && (
-        <div className="z-40 w-11/12 max-w-md p-8 rounded-[32px] bg-white/40 backdrop-blur-md border border-white/60 shadow-2xl text-center flex flex-col items-center transform scale-100 transition-all duration-500">
-          <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-black tracking-widest uppercase px-4 py-1.5 rounded-full mb-6 shadow-md animate-bounce">
-            Special Quest Unlocked 👑
+        <div className="z-40 w-11/12 max-w-md p-8 rounded-[32px] bg-slate-900/50 backdrop-blur-xl border border-purple-500/30 shadow-[0_0_40px_rgba(168,85,247,0.3)] text-center flex flex-col items-center transform scale-100 transition-all duration-500">
+          <div className="bg-gradient-to-r from-amber-400 to-yellow-500 text-slate-950 text-xs font-black tracking-widest uppercase px-4 py-1.5 rounded-full mb-6 shadow-md animate-bounce">
+            Secret Invitation 💌
           </div>
           
-          <h1 className="font-display font-black text-5xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 leading-tight mb-4">
+          <h1 className="font-display font-black text-5xl text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-pink-400 to-indigo-300 leading-tight mb-4">
             Hi Mannu! ✨
           </h1>
           
-          <p className="text-slate-600 font-semibold leading-relaxed mb-8 text-sm md:text-base">
+          <p className="text-slate-300 font-semibold leading-relaxed mb-8 text-sm md:text-base">
             You've received an invite to a secret birthday world. Enter below to start your quest! Make sure your sound is turned up! 🔊🎶
           </p>
 
           <button 
             onClick={enterWorld}
-            className="w-full text-white font-black py-4 px-8 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-3 transform hover:scale-102 hover:-translate-y-0.5 active:scale-98 transition-all bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 animate-shimmer cursor-pointer"
+            className="w-full text-white font-black py-4 px-8 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-3 transform hover:scale-102 hover:-translate-y-0.5 active:scale-98 transition-all bg-gradient-to-r from-amber-500 via-pink-500 to-purple-600 animate-shimmer cursor-pointer"
           >
             <span>Enter Mannu's World</span>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
