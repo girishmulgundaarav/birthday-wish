@@ -76,7 +76,7 @@ class SynthSequencer {
     this.timeouts = [];
   }
 
-  start(currentTimeCallback) {
+  start(currentTimeCallback, onEndedCallback) {
     if (this.isPlaying) return;
     this.isPlaying = true;
     
@@ -89,50 +89,46 @@ class SynthSequencer {
     }
 
     const loopDuration = 28.0;
-
-    const playLoop = () => {
-      const loopStart = this.ctx.currentTime;
+    const loopStart = this.ctx.currentTime;
+    
+    this.notes.forEach(noteData => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
       
-      this.notes.forEach(noteData => {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(noteData.note, loopStart + noteData.time);
-        
-        gain.gain.setValueAtTime(0, loopStart + noteData.time);
-        gain.gain.linearRampToValueAtTime(0.08, loopStart + noteData.time + 0.05);
-        gain.gain.setValueAtTime(0.08, loopStart + noteData.time + noteData.duration - 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, loopStart + noteData.time + noteData.duration);
-        
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        
-        osc.start(loopStart + noteData.time);
-        osc.stop(loopStart + noteData.time + noteData.duration);
-      });
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(noteData.note, loopStart + noteData.time);
+      
+      gain.gain.setValueAtTime(0, loopStart + noteData.time);
+      gain.gain.linearRampToValueAtTime(0.08, loopStart + noteData.time + 0.05);
+      gain.gain.setValueAtTime(0.08, loopStart + noteData.time + noteData.duration - 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, loopStart + noteData.time + noteData.duration);
+      
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      
+      osc.start(loopStart + noteData.time);
+      osc.stop(loopStart + noteData.time + noteData.duration);
+    });
 
-      const checkInterval = 100;
-      const ticks = loopDuration * 10;
-      for (let i = 0; i < ticks; i++) {
-        const t = (i * checkInterval) / 1000;
-        const timeoutId = setTimeout(() => {
-          if (this.isPlaying) {
-            currentTimeCallback(t);
-          }
-        }, i * checkInterval);
-        this.timeouts.push(timeoutId);
-      }
-
-      const nextLoopTimeout = setTimeout(() => {
+    const checkInterval = 100;
+    const ticks = loopDuration * 10;
+    for (let i = 0; i < ticks; i++) {
+      const t = (i * checkInterval) / 1000;
+      const timeoutId = setTimeout(() => {
         if (this.isPlaying) {
-          playLoop();
+          currentTimeCallback(t);
         }
-      }, loopDuration * 1000);
-      this.timeouts.push(nextLoopTimeout);
-    };
+      }, i * checkInterval);
+      this.timeouts.push(timeoutId);
+    }
 
-    playLoop();
+    const endTimeout = setTimeout(() => {
+      if (this.isPlaying) {
+        this.stop();
+        if (onEndedCallback) onEndedCallback();
+      }
+    }, loopDuration * 1000);
+    this.timeouts.push(endTimeout);
   }
 
   stop() {
@@ -173,7 +169,7 @@ export default function App() {
 
     // 2. Initialize Audio element
     const audio = new Audio('Mannu Ka Janmadin.mp3');
-    audio.loop = true;
+    audio.loop = false;
     audioRef.current = audio;
 
     const handleCanPlayThrough = () => setMusicLoaded(true);
@@ -182,9 +178,14 @@ export default function App() {
       setUseSynthFallback(true);
       setMusicLoaded(true);
     };
+    const handleAudioEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    };
 
     audio.addEventListener('canplaythrough', handleCanPlayThrough);
     audio.addEventListener('error', handleAudioError);
+    audio.addEventListener('ended', handleAudioEnded);
 
     // Synchronize lyrics on time update
     const handleTimeUpdate = () => {
@@ -196,6 +197,7 @@ export default function App() {
       audio.removeEventListener('canplaythrough', handleCanPlayThrough);
       audio.removeEventListener('error', handleAudioError);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
+      audio.removeEventListener('ended', handleAudioEnded);
       audio.pause();
       synthRef.current.stop();
     };
@@ -334,13 +336,13 @@ export default function App() {
     setIsPlaying(true);
     
     if (useSynthFallback) {
-      synthRef.current.start((t) => setCurrentTime(t));
+      synthRef.current.start((t) => setCurrentTime(t), () => setIsPlaying(false));
     } else if (audioRef.current) {
       audioRef.current.play()
         .catch(err => {
           console.warn("Audio play blocked. Switching to synth fallback.", err);
           setUseSynthFallback(true);
-          synthRef.current.start((t) => setCurrentTime(t));
+          synthRef.current.start((t) => setCurrentTime(t), () => setIsPlaying(false));
         });
     }
 
@@ -376,11 +378,11 @@ export default function App() {
       setIsPlaying(false);
     } else {
       if (useSynthFallback) {
-        synthRef.current.start((t) => setCurrentTime(t));
+        synthRef.current.start((t) => setCurrentTime(t), () => setIsPlaying(false));
       } else if (audioRef.current) {
         audioRef.current.play().catch(() => {
           setUseSynthFallback(true);
-          synthRef.current.start((t) => setCurrentTime(t));
+          synthRef.current.start((t) => setCurrentTime(t), () => setIsPlaying(false));
         });
       }
       setIsPlaying(true);
@@ -388,7 +390,7 @@ export default function App() {
   };
 
   return (
-    <div className="w-full h-screen relative overflow-hidden select-none bg-gradient-to-tr from-rose-50 via-purple-50 to-cyan-50 flex items-center justify-center font-sans text-slate-800">
+    <div className="w-full h-dvh relative overflow-hidden select-none bg-gradient-to-tr from-rose-50 via-purple-50 to-cyan-50 flex items-center justify-center font-sans text-slate-800">
       
       {/* 1. Music Toggle Indicator (Top right corner HUD) */}
       {gameState === 'won' && (
