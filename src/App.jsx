@@ -265,7 +265,7 @@ class SynthSequencer {
 }
 
 export default function App() {
-  const [gameState, setGameState] = useState('landing'); // landing, playing, won
+  const [gameState, setGameState] = useState('welcome'); // welcome, landing, playing, won
   const [score, setScore] = useState(0);
   const [balloons, setBalloons] = useState([]);
   const [currentTime, setCurrentTime] = useState(0);
@@ -410,6 +410,16 @@ export default function App() {
     }, LYRIC_TIMELINE[0]);
     setCurrentLyric(activeLyric.text);
   }, [currentTime]);
+
+  const enterWorld = () => {
+    setGameState('landing');
+    if (bgmAudioRef.current) {
+      bgmAudioRef.current.volume = 0.55;
+      bgmAudioRef.current.play().catch(err => {
+        console.warn("Failed to play background music on welcome click:", err);
+      });
+    }
+  };
 
   // Handle game/music state toggling
   const startQuest = () => {
@@ -593,7 +603,7 @@ export default function App() {
   };
 
   const handleLaunchInteraction = () => {
-    if (bgmAudioRef.current && bgmAudioRef.current.paused && gameState === 'landing') {
+    if (bgmAudioRef.current && bgmAudioRef.current.paused && (gameState === 'landing' || gameState === 'welcome')) {
       bgmAudioRef.current.play().catch(() => {});
     }
   };
@@ -624,7 +634,39 @@ export default function App() {
         </button>
       )}
 
-      {/* 2. LANDING DISPLAY STATE */}
+      {/* 2. WELCOME DISPLAY STATE */}
+      {gameState === 'welcome' && (
+        <div className="z-40 w-11/12 max-w-md p-8 rounded-[32px] bg-white/40 backdrop-blur-md border border-white/60 shadow-2xl text-center flex flex-col items-center transform scale-100 transition-all duration-500">
+          <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-black tracking-widest uppercase px-4 py-1.5 rounded-full mb-6 shadow-md animate-bounce">
+            Birthday Invitation 💌
+          </div>
+          
+          <h1 className="font-display font-black text-4xl md:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 leading-tight mb-4">
+            Mannu's World! 🦄✨
+          </h1>
+          
+          <div className="relative w-28 h-28 my-6 flex items-center justify-center animate-float">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-20 animate-ping"></span>
+            <span className="text-6xl drop-shadow-lg filter">🎁</span>
+          </div>
+          
+          <p className="text-slate-600 font-semibold leading-relaxed mb-8 text-sm md:text-base">
+            Click below to enter a magical birthday world created just for you. Make sure your volume is turned up! 🔊🎶
+          </p>
+
+          <button 
+            onClick={enterWorld}
+            className="w-full text-white font-black py-4 px-8 rounded-2xl text-lg shadow-lg flex items-center justify-center gap-3 transform hover:scale-102 hover:-translate-y-0.5 active:scale-98 transition-all bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 animate-shimmer cursor-pointer"
+          >
+            <span>Enter Mannu's World</span>
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* 3. LANDING DISPLAY STATE */}
       {gameState === 'landing' && (
         <div className="z-40 w-11/12 max-w-md p-8 rounded-[32px] bg-white/40 backdrop-blur-md border border-white/60 shadow-2xl text-center flex flex-col items-center transform scale-100 transition-all duration-500">
           <div className="bg-gradient-to-r from-pink-500 to-purple-600 text-white text-xs font-black tracking-widest uppercase px-4 py-1.5 rounded-full mb-6 shadow-md animate-bounce">
