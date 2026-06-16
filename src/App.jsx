@@ -22,6 +22,69 @@ const BALLOON_COLORS = [
   { bg: 'from-emerald-400 to-emerald-600', border: 'border-emerald-300', hex: '#10b981' }
 ];
 
+// Dynamically generate a short synthesized pop sound in WAV format
+const generatePopSoundUri = () => {
+  const sampleRate = 8000;
+  const duration = 0.12; // 120ms
+  const numSamples = sampleRate * duration;
+  const buffer = new Uint8Array(44 + numSamples);
+  
+  // RIFF header
+  buffer[0] = 0x52; buffer[1] = 0x49; buffer[2] = 0x46; buffer[3] = 0x46; // "RIFF"
+  const fileLength = 36 + numSamples;
+  buffer[4] = fileLength & 0xFF;
+  buffer[5] = (fileLength >> 8) & 0xFF;
+  buffer[6] = (fileLength >> 16) & 0xFF;
+  buffer[7] = (fileLength >> 24) & 0xFF;
+  buffer[8] = 0x57; buffer[9] = 0x41; buffer[10] = 0x56; buffer[11] = 0x45; // "WAVE"
+  
+  // Format chunk
+  buffer[12] = 0x66; buffer[13] = 0x6D; buffer[14] = 0x74; buffer[15] = 0x20; // "fmt "
+  buffer[16] = 16; buffer[17] = 0; buffer[18] = 0; buffer[19] = 0; // chunk size
+  buffer[20] = 1; buffer[21] = 0; // PCM format
+  buffer[22] = 1; buffer[23] = 0; // Mono channel
+  buffer[24] = sampleRate & 0xFF;
+  buffer[25] = (sampleRate >> 8) & 0xFF;
+  buffer[26] = (sampleRate >> 16) & 0xFF;
+  buffer[27] = (sampleRate >> 24) & 0xFF;
+  const byteRate = sampleRate;
+  buffer[28] = byteRate & 0xFF;
+  buffer[29] = (byteRate >> 8) & 0xFF;
+  buffer[30] = (byteRate >> 16) & 0xFF;
+  buffer[31] = (byteRate >> 24) & 0xFF;
+  buffer[32] = 1; buffer[33] = 0; // block align
+  buffer[34] = 8; buffer[35] = 0; // bits per sample (8-bit)
+  
+  // Data chunk
+  buffer[36] = 0x64; buffer[37] = 0x61; buffer[38] = 0x74; buffer[39] = 0x61; // "data"
+  buffer[40] = numSamples & 0xFF;
+  buffer[41] = (numSamples >> 8) & 0xFF;
+  buffer[42] = (numSamples >> 16) & 0xFF;
+  buffer[43] = (numSamples >> 24) & 0xFF;
+  
+  // Generate cute frequency sweep for pop chime
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    // Sweep frequency downwards quickly
+    const freq = 700 - 550 * (i / numSamples);
+    const angle = 2 * Math.PI * freq * t;
+    const sample = Math.sin(angle);
+    // Unsigned 8-bit output, exponential volume decay envelope
+    const envelope = Math.exp(-6 * (i / numSamples));
+    buffer[44 + i] = Math.floor((sample * envelope * 0.5 + 0.5) * 255);
+  }
+  
+  // Convert buffer to base64 Data URI
+  let binary = '';
+  const len = buffer.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(buffer[i]);
+  }
+  return 'data:audio/wav;base64,' + btoa(binary);
+};
+
+const POP_SOUND_URI = generatePopSoundUri();
+
 // Fallback Synthesizer for "Level Up, Mannu" retro 8-bit chip-tune track
 class SynthSequencer {
   constructor() {
@@ -153,7 +216,6 @@ export default function App() {
 
   const audioRef = useRef(null);
   const synthRef = useRef(new SynthSequencer());
-  const sfxCtxRef = useRef(null);
   const balloonContainerRef = useRef(null);
   const animationFrameRef = useRef(null);
   const poppedCountRef = useRef(0);
@@ -201,9 +263,6 @@ export default function App() {
       audio.removeEventListener('ended', handleAudioEnded);
       audio.pause();
       synthRef.current.stop();
-      if (sfxCtxRef.current) {
-        sfxCtxRef.current.close().catch(() => {});
-      }
     };
   }, []);
 
@@ -219,18 +278,6 @@ export default function App() {
   // Handle game/music state toggling
   const startQuest = () => {
     setGameState('playing');
-    
-    // Initialize SFX AudioContext on user interaction to unlock it
-    try {
-      if (!sfxCtxRef.current) {
-        sfxCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (sfxCtxRef.current.state === 'suspended') {
-        sfxCtxRef.current.resume();
-      }
-    } catch (e) {
-      console.warn("Failed to initialize SFX audio context on click:", e);
-    }
 
     // Spawn initial balloons
     for (let i = 0; i < 4; i++) {
@@ -318,28 +365,9 @@ export default function App() {
 
   const playPopChime = () => {
     try {
-      if (!sfxCtxRef.current) {
-        sfxCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      const ctx = sfxCtxRef.current;
-      if (ctx.state === 'suspended') {
-        ctx.resume();
-      }
-
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(600, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + 0.15);
-      
-      gain.gain.setValueAtTime(0.15, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
-      
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.18);
+      const popAudio = new Audio(POP_SOUND_URI);
+      popAudio.volume = 0.6;
+      popAudio.play().catch(e => console.warn("Audio element play blocked:", e));
     } catch(e) {
       console.warn("Failed to play pop sound:", e);
     }
