@@ -424,17 +424,16 @@ export default function App() {
         console.warn("Failed to play background music on welcome click:", err);
       });
     }
-    // Unlock Victory Audio on user gesture
+    // Unlock Victory Audio on user gesture synchronously
     if (audioRef.current) {
       audioRef.current.volume = 0;
-      audioRef.current.play()
-        .then(() => {
-          audioRef.current.pause();
-          audioRef.current.volume = 1;
-        })
-        .catch(err => {
-          console.warn("Failed to unlock victory audio on welcome click:", err);
-        });
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {});
+      }
+      audioRef.current.pause();
+      audioRef.current.volume = 1;
+      audioRef.current.currentTime = 0;
     }
   };
 
@@ -449,17 +448,16 @@ export default function App() {
       bgmAudioRef.current.play().catch(() => {});
     }
 
-    // Unlock Victory Audio on user gesture again for safety
+    // Unlock Victory Audio on user gesture again for safety synchronously
     if (audioRef.current) {
       audioRef.current.volume = 0;
-      audioRef.current.play()
-        .then(() => {
-          audioRef.current.pause();
-          audioRef.current.volume = 1;
-        })
-        .catch(err => {
-          console.warn("Failed to unlock victory audio on start quest click:", err);
-        });
+      const playPromise = audioRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {});
+      }
+      audioRef.current.pause();
+      audioRef.current.volume = 1;
+      audioRef.current.currentTime = 0;
     }
 
     // Spawn initial balloons
