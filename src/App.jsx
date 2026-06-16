@@ -424,6 +424,18 @@ export default function App() {
         console.warn("Failed to play background music on welcome click:", err);
       });
     }
+    // Unlock Victory Audio on user gesture
+    if (audioRef.current) {
+      audioRef.current.volume = 0;
+      audioRef.current.play()
+        .then(() => {
+          audioRef.current.pause();
+          audioRef.current.volume = 1;
+        })
+        .catch(err => {
+          console.warn("Failed to unlock victory audio on welcome click:", err);
+        });
+    }
   };
 
   // Handle game/music state toggling
@@ -435,6 +447,19 @@ export default function App() {
     if (bgmAudioRef.current) {
       bgmAudioRef.current.volume = 0.2; // Low volume during balloon pops
       bgmAudioRef.current.play().catch(() => {});
+    }
+
+    // Unlock Victory Audio on user gesture again for safety
+    if (audioRef.current) {
+      audioRef.current.volume = 0;
+      audioRef.current.play()
+        .then(() => {
+          audioRef.current.pause();
+          audioRef.current.volume = 1;
+        })
+        .catch(err => {
+          console.warn("Failed to unlock victory audio on start quest click:", err);
+        });
     }
 
     // Spawn initial balloons
