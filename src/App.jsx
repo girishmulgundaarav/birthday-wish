@@ -613,7 +613,7 @@ export default function App() {
               <span className="text-xl">🎈</span>
               <span className="font-extrabold tracking-wide text-slate-700 text-xs md:text-sm">MANNU'S POP COUNT:</span>
             </div>
-            <div className="bg-purple-600 text-white font-black text-lg md:text-xl px-4 py-1 rounded-xl min-w-[70px] text-center shadow">
+            <div className="bg-purple-600 text-white font-black text-lg md:text-xl px-4 py-1 rounded-xl min-w-[75px] text-center shadow whitespace-nowrap flex-shrink-0">
               {score} / 8
             </div>
           </div>
