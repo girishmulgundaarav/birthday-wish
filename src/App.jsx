@@ -592,8 +592,18 @@ export default function App() {
     }
   };
 
+  const handleLaunchInteraction = () => {
+    if (bgmAudioRef.current && bgmAudioRef.current.paused && gameState === 'landing') {
+      bgmAudioRef.current.play().catch(() => {});
+    }
+  };
+
   return (
-    <div className="w-full h-dvh relative overflow-hidden select-none bg-gradient-to-tr from-rose-50 via-purple-50 to-cyan-50 flex items-center justify-center font-sans text-slate-800">
+    <div 
+      onClick={handleLaunchInteraction}
+      onTouchStart={handleLaunchInteraction}
+      className="w-full h-dvh relative overflow-hidden select-none bg-gradient-to-tr from-rose-50 via-purple-50 to-cyan-50 flex items-center justify-center font-sans text-slate-800"
+    >
       
       {/* 1. Music Toggle Indicator (Top right corner HUD) */}
       {gameState === 'won' && (
