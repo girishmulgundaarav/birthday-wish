@@ -799,8 +799,8 @@ export default function App() {
           </div>
 
           {/* Real-time Dynamic Lyrics Display Bar */}
-          <div className="w-full bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-pink-200 rounded-2xl py-3.5 px-4 mb-6 min-h-[55px] flex flex-col justify-center items-center shadow-inner">
-            <p className="text-base md:text-lg font-black text-center tracking-wider rainbow-glow-text">
+          <div className="w-full bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-pink-500/10 border border-pink-200 rounded-2xl py-4 px-5 mb-6 min-h-[68px] flex flex-col justify-center items-center shadow-inner">
+            <p className="text-sm md:text-base lg:text-lg font-black text-center tracking-wider rainbow-glow-text leading-relaxed">
               {currentLyric}
             </p>
           </div>
