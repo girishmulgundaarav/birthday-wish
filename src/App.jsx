@@ -153,6 +153,7 @@ export default function App() {
 
   const audioRef = useRef(null);
   const synthRef = useRef(new SynthSequencer());
+  const sfxCtxRef = useRef(null);
   const balloonContainerRef = useRef(null);
   const animationFrameRef = useRef(null);
   const poppedCountRef = useRef(0);
@@ -200,6 +201,9 @@ export default function App() {
       audio.removeEventListener('ended', handleAudioEnded);
       audio.pause();
       synthRef.current.stop();
+      if (sfxCtxRef.current) {
+        sfxCtxRef.current.close().catch(() => {});
+      }
     };
   }, []);
 
@@ -215,6 +219,19 @@ export default function App() {
   // Handle game/music state toggling
   const startQuest = () => {
     setGameState('playing');
+    
+    // Initialize SFX AudioContext on user interaction to unlock it
+    try {
+      if (!sfxCtxRef.current) {
+        sfxCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (sfxCtxRef.current.state === 'suspended') {
+        sfxCtxRef.current.resume();
+      }
+    } catch (e) {
+      console.warn("Failed to initialize SFX audio context on click:", e);
+    }
+
     // Spawn initial balloons
     for (let i = 0; i < 4; i++) {
       setTimeout(() => spawnBalloon(), i * 800);
@@ -301,7 +318,14 @@ export default function App() {
 
   const playPopChime = () => {
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      if (!sfxCtxRef.current) {
+        sfxCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = sfxCtxRef.current;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       
@@ -316,7 +340,9 @@ export default function App() {
       gain.connect(ctx.destination);
       osc.start();
       osc.stop(ctx.currentTime + 0.18);
-    } catch(e) {}
+    } catch(e) {
+      console.warn("Failed to play pop sound:", e);
+    }
   };
 
   const triggerConfettiBurst = (x, y, color) => {
