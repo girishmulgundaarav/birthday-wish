@@ -143,6 +143,91 @@ const generatePoofSoundUri = () => {
 
 const POOF_SOUND_URI = generatePoofSoundUri();
 
+// Gentle background music sequencer for the gameplay screen
+class BgmSequencer {
+  constructor() {
+    this.ctx = null;
+    this.isPlaying = false;
+    this.notes = [
+      // A soft, dreamy arpeggio loop
+      { time: 0.0, note: 261.63, duration: 0.4 }, // C4
+      { time: 0.4, note: 329.63, duration: 0.4 }, // E4
+      { time: 0.8, note: 392.00, duration: 0.4 }, // G4
+      { time: 1.2, note: 523.25, duration: 0.4 }, // C5
+      { time: 1.6, note: 349.23, duration: 0.4 }, // F4
+      { time: 2.0, note: 440.00, duration: 0.4 }, // A4
+      { time: 2.4, note: 523.25, duration: 0.4 }, // C5
+      { time: 2.8, note: 587.33, duration: 0.4 }, // D5
+      { time: 3.2, note: 293.66, duration: 0.4 }, // D4
+      { time: 3.6, note: 349.23, duration: 0.4 }, // F4
+      { time: 4.0, note: 392.00, duration: 0.4 }, // G4
+      { time: 4.4, note: 493.88, duration: 0.4 }, // B4
+      { time: 4.8, note: 261.63, duration: 0.4 }, // C4
+      { time: 5.2, note: 329.63, duration: 0.4 }, // E4
+      { time: 5.6, note: 392.00, duration: 0.4 }, // G4
+      { time: 6.0, note: 349.23, duration: 0.8 }, // F4
+    ];
+    this.timeouts = [];
+  }
+
+  start() {
+    if (this.isPlaying) return;
+    this.isPlaying = true;
+    
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+
+    const loopDuration = 6.4;
+
+    const playLoop = () => {
+      const loopStart = this.ctx.currentTime;
+      
+      this.notes.forEach(noteData => {
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(noteData.note, loopStart + noteData.time);
+        
+        // Very low volume background ambient tone
+        gain.gain.setValueAtTime(0, loopStart + noteData.time);
+        gain.gain.linearRampToValueAtTime(0.015, loopStart + noteData.time + 0.1);
+        gain.gain.setValueAtTime(0.015, loopStart + noteData.time + noteData.duration - 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, loopStart + noteData.time + noteData.duration);
+        
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        
+        osc.start(loopStart + noteData.time);
+        osc.stop(loopStart + noteData.time + noteData.duration);
+      });
+
+      const nextLoopTimeout = setTimeout(() => {
+        if (this.isPlaying) {
+          playLoop();
+        }
+      }, loopDuration * 1000);
+      this.timeouts.push(nextLoopTimeout);
+    };
+
+    playLoop();
+  }
+
+  stop() {
+    this.isPlaying = false;
+    this.timeouts.forEach(id => clearTimeout(id));
+    this.timeouts = [];
+    if (this.ctx && this.ctx.state === 'running') {
+      this.ctx.suspend();
+    }
+  }
+}
+
 // Fallback Synthesizer for "Level Up, Mannu" retro 8-bit chip-tune track
 class SynthSequencer {
   constructor() {
@@ -274,6 +359,7 @@ export default function App() {
 
   const audioRef = useRef(null);
   const synthRef = useRef(new SynthSequencer());
+  const bgmRef = useRef(new BgmSequencer());
   const balloonContainerRef = useRef(null);
   const animationFrameRef = useRef(null);
   const poppedCountRef = useRef(0);
@@ -374,6 +460,7 @@ export default function App() {
       audio.removeEventListener('ended', handleAudioEnded);
       audio.pause();
       synthRef.current.stop();
+      bgmRef.current.stop();
     };
   }, []);
 
@@ -390,6 +477,7 @@ export default function App() {
   const startQuest = () => {
     setGameState('playing');
     setCandles([true, true, true, true, true, true, true, true]); // Reset candles for the next round
+    bgmRef.current.start(); // Start play screen background music
 
     // Spawn initial balloons
     for (let i = 0; i < 4; i++) {
@@ -499,6 +587,7 @@ export default function App() {
 
   const triggerVictory = () => {
     setGameState('won');
+    bgmRef.current.stop(); // Stop the gameplay BGM
     setIsPlaying(true);
     
     if (useSynthFallback) {
