@@ -364,7 +364,7 @@ export default function App() {
 
     // Unlocking BGM for mobile browsers
     const handleUnlockBgm = () => {
-      if (bgmAudioRef.current && bgmAudioRef.current.paused && gameStateRef.current !== 'won') {
+      if (bgmAudioRef.current && bgmAudioRef.current.paused && gameStateRef.current !== 'won' && poppedCountRef.current < 8) {
         bgmAudioRef.current.play().catch(() => {});
       }
     };
@@ -544,46 +544,48 @@ export default function App() {
   };
 
   const triggerVictory = () => {
-    setGameState('won');
-    
-    // Stop BGM completely
+    // Stop BGM completely and immediately
     if (bgmAudioRef.current) {
       bgmAudioRef.current.pause();
     }
     
-    setIsPlaying(true);
-    
-    if (useSynthFallback) {
-      synthRef.current.start((t) => setCurrentTime(t), () => setIsPlaying(false));
-    } else if (audioRef.current) {
-      audioRef.current.play()
-        .catch(err => {
-          console.warn("Audio play blocked. Switching to synth fallback.", err);
-          setUseSynthFallback(true);
-          synthRef.current.start((t) => setCurrentTime(t), () => setIsPlaying(false));
-        });
-    }
-
-    // Launch continuous party confetti show
-    const end = Date.now() + 6000;
-    const frame = () => {
-      if (window.confetti) {
-        window.confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 60,
-          origin: { x: 0, y: 0.8 }
-        });
-        window.confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 60,
-          origin: { x: 1, y: 0.8 }
-        });
+    // Give 2 seconds gap before switching state and starting celebration BGM
+    setTimeout(() => {
+      setGameState('won');
+      setIsPlaying(true);
+      
+      if (useSynthFallback) {
+        synthRef.current.start((t) => setCurrentTime(t), () => setIsPlaying(false));
+      } else if (audioRef.current) {
+        audioRef.current.play()
+          .catch(err => {
+            console.warn("Audio play blocked. Switching to synth fallback.", err);
+            setUseSynthFallback(true);
+            synthRef.current.start((t) => setCurrentTime(t), () => setIsPlaying(false));
+          });
       }
-      if (Date.now() < end) requestAnimationFrame(frame);
-    };
-    frame();
+
+      // Launch continuous party confetti show
+      const end = Date.now() + 6000;
+      const frame = () => {
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 5,
+            angle: 60,
+            spread: 60,
+            origin: { x: 0, y: 0.8 }
+          });
+          window.confetti({
+            particleCount: 5,
+            angle: 120,
+            spread: 60,
+            origin: { x: 1, y: 0.8 }
+          });
+        }
+        if (Date.now() < end) requestAnimationFrame(frame);
+      };
+      frame();
+    }, 2000);
   };
 
   const toggleMusic = () => {
