@@ -522,6 +522,9 @@ export default function App() {
     e.preventDefault();
     e.stopPropagation();
 
+    // Ignore further pops if we have already reached the target of 8 popped balloons
+    if (poppedCountRef.current >= 8) return;
+
     const targetBalloon = balloons.find(b => b.id === id);
     if (!targetBalloon) return;
 
