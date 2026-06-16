@@ -702,7 +702,7 @@ export default function App() {
           </div>
           
           <h1 className="font-display font-black text-5xl text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-pink-500 to-rose-500 leading-tight mb-4">
-            Hi Mannu! ✨
+            Ready, Mannu? 🎮
           </h1>
           
           <p className="text-slate-600 font-semibold leading-relaxed mb-8 text-sm md:text-base">
