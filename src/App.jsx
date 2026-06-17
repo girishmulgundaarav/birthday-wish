@@ -952,7 +952,7 @@ export default function App() {
             </button>
           </div>
 
-          <p className="text-[10px] text-slate-400 font-medium">Made with love by your family ❤️</p>
+          <p className="text-[10px] text-slate-400 font-medium">Made with love by your friends and family ❤️</p>
         </div>
       )}
     </div>
